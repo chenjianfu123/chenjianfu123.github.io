@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>林婷老师 - 课程表桌面卡片</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+        body {
+            background: #f7f9fc;
+            padding: 14px;
+        }
+        .card {
+            background: #ffffff;
+            border-radius: 18px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+            padding: 16px;
+        }
+        .header {
+            display:flex;
+            justify-content: space-between;
+            align-items:center;
+            margin-bottom:14px;
+        }
+        .title {
+            font-size:18px;
+            font-weight:bold;
+            color:#222;
+        }
+        .week-text {
+            font-size:15px;
+            color:#555;
+        }
+        .item {
+            padding:10px 12px;
+            border-radius:12px;
+            margin-bottom:8px;
+            border:1px solid #eee;
+        }
+        .item.current {
+            background:#e8f3ff;
+            border-color:#4086e8;
+        }
+        .item.next {
+            background:#fff3e6;
+            border-color:#f2994a;
+        }
+        .item.finish {
+            opacity:0.55;
+        }
+        .time-row {
+            font-size:13px;
+            color:#666;
+            margin-bottom:4px;
+        }
+        .class-row {
+            font-size:15px;
+            font-weight:500;
+            color:#222;
+        }
+        .rest-tip {
+            text-align:center;
+            padding:30px 0;
+            color:#777;
+            font-size:16px;
+        }
+    </style>
+</head>
+<body>
+<div class="card">
+    <div class="header">
+        <div class="title">📅 今日课程</div>
+        <div class="week-text" id="weekInfo"></div>
+    </div>
+    <div id="listWrap"></div>
+</div>
+
+<script>
+// 课程数据
+const courseData = {
+    1: [ //周一
+        {time:"8:00~8:40", name:"劳动（7年级5班）"},
+        {time:"9:10~9:50", name:"数学（7年级1班）"},
+        {time:"11:35~12:10", name:"数学（7年级5班）"},
+        {time:"14:40~15:20", name:"综合实践（7年级1班）"},
+    ],
+    2: [ //周二
+        {time:"9:10~9:50", name:"数学（7年级1班）"},
+        {time:"10:50~11:30", name:"数学（7年级5班）"},
+    ],
+    3: [ //周三
+        {time:"8:00~8:40", name:"数学（7年级1班）"},
+        {time:"10:00~10:40", name:"数学（7年级5班）"},
+        {time:"10:50~11:30", name:"海洋意识（7年级5班）"},
+        {time:"15:35~16:15", name:"数学（7年级1班）"},
+    ],
+    4: [ //周四
+        {time:"9:10~9:50", name:"数学（7年级1班）"},
+        {time:"10:50~11:30", name:"数学（7年级5班）"},
+        {time:"19:20~21:30", name:"晚修"},
+    ],
+    0: [ //周日
+        {time:"19:20~21:30", name:"晚修"},
+    ],
+    5: [ //周五
+        {time:"10:00~10:40", name:"数学（7年级5班）"},
+        {time:"11:35~12:10", name:"海洋意识（7年级1班）"},
+        {time:"16:25~17:05", name:"综合实践（7年级5班）"},
+    ],
+    6: [] //周六无课
+};
+
+// 解析时间字符串转分钟
+function timeToMin(str){
+    let [h,m] = str.split("~")[0].split(":");
+    return Number(h)*60 + Number(m);
+}
+function timeEndToMin(str){
+    let [_,end] = str.split("~");
+    let [h,m] = end.split(":");
+    return Number(h)*60 + Number(m);
+}
+
+function render(){
+    const now = new Date();
+    const w = now.getDay(); //0周日，1周一...6周六
+    const hour = now.getHours();
+    const min = now.getMinutes();
+    const nowMin = hour*60 + min;
+
+    const weekNames = ["周日","周一","周二","周三","周四","周五","周六"];
+    document.getElementById("weekInfo").innerText = weekNames[w];
+
+    const list = courseData[w];
+    const wrap = document.getElementById("listWrap");
+    wrap.innerHTML = "";
+
+    if(list.length === 0){
+        wrap.innerHTML = `<div class="rest-tip">今日无课程安排 ✨</div>`;
+        return;
+    }
+
+    for(let i=0;i<list.length;i++){
+        const item = list[i];
+        const sMin = timeToMin(item.time);
+        const eMin = timeEndToMin(item.time);
+        let cls = "item";
+        if(nowMin >= sMin && nowMin <= eMin){
+            cls += " current";
+        }else if(nowMin < sMin){
+            if(!list.slice(0,i+1).some(x=>{
+                let sm = timeToMin(x.time);
+                let em = timeEndToMin(x.time);
+                return nowMin >= sm && nowMin <= em;
+            })){
+                cls += " next";
+            }
+        }else{
+            cls += " finish";
+        }
+        wrap.innerHTML += `
+        <div class="${cls}">
+            <div class="time-row">${item.time}</div>
+            <div class="class-row">${item.name}</div>
+        </div>
+        `;
+    }
+}
+render();
+setInterval(render, 60000);
+</script>
+</html>
